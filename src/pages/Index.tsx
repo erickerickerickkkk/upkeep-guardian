@@ -277,9 +277,13 @@ const Index = () => {
                                 <SelectContent><SelectItem value="executed">Executado</SelectItem><SelectItem value="pending">Não Executado</SelectItem></SelectContent>
                               </Select>
                               <label className="flex h-10 items-center gap-2 rounded-md border border-input px-3"><Checkbox checked={service.evidence} onCheckedChange={(checked) => updateService(environment.id, service.id, { evidence: Boolean(checked) })} /> Evidência</label>
-                              <div className="flex justify-end gap-1"><Button variant="success" size="sm" onClick={() => collapseService(service.id)}>Finalizar</Button><Button variant="ghost" size="icon" onClick={() => setEditing({ type: "service", id: service.id })} aria-label="Editar serviço"><Edit3 className="size-4" /></Button><Button variant="ghost" size="icon" onClick={() => removeService(environment.id, service.id)} aria-label="Remover serviço"><Trash2 className="size-4 text-destructive" /></Button></div>
                               <Input className="xl:col-span-1" placeholder="Responsável" value={service.responsible} onChange={(event) => updateService(environment.id, service.id, { responsible: event.target.value })} />
                               <Textarea placeholder="Observações" value={service.notes} onChange={(event) => updateService(environment.id, service.id, { notes: event.target.value })} className="min-h-10 xl:col-span-2" />
+                              <div className="flex justify-end gap-1 xl:col-span-3">
+                                <Button variant="success" size="sm" onClick={() => { setEditing(null); collapseService(service.id); }}><Save className="size-4" /> Salvar</Button>
+                                <Button variant="ghost" size="icon" onClick={() => setEditing({ type: "service", id: service.id })} aria-label="Editar serviço"><Edit3 className="size-4" /></Button>
+                                <Button variant="ghost" size="icon" onClick={() => removeService(environment.id, service.id)} aria-label="Remover serviço"><Trash2 className="size-4 text-destructive" /></Button>
+                              </div>
                             </div>
                           )}
                         </div>
