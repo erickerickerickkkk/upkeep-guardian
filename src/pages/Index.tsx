@@ -78,6 +78,7 @@ const Index = () => {
   const [selectedAgencyId, setSelectedAgencyId] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ type: "agency" | "environment" | "service"; id: string } | null>(null);
   const [collapsedEnvironmentIds, setCollapsedEnvironmentIds] = useState<string[]>([]);
+  const [collapsedServiceIds, setCollapsedServiceIds] = useState<string[]>([]);
 
   useEffect(() => {
     localStorage.setItem("bank-maintenance-data", JSON.stringify(agencies));
@@ -91,6 +92,8 @@ const Index = () => {
   const updateService = (environmentId: string, serviceId: string, patch: Partial<Service>) => updateEnvironment(environmentId, (environment) => ({ ...environment, services: environment.services.map((service) => (service.id === serviceId ? { ...service, ...patch } : service)) }));
   const collapseEnvironment = (environmentId: string) => setCollapsedEnvironmentIds((current) => (current.includes(environmentId) ? current : [...current, environmentId]));
   const expandEnvironment = (environmentId: string) => setCollapsedEnvironmentIds((current) => current.filter((id) => id !== environmentId));
+  const collapseService = (serviceId: string) => setCollapsedServiceIds((current) => (current.includes(serviceId) ? current : [...current, serviceId]));
+  const expandService = (serviceId: string) => setCollapsedServiceIds((current) => current.filter((id) => id !== serviceId));
 
   const addAgency = () => {
     const agency = { id: uid(), name: "Nova Agência", code: String(Math.floor(1000 + Math.random() * 9000)), environments: [] };
@@ -109,6 +112,7 @@ const Index = () => {
   const addService = (environmentId: string) => {
     const service = { id: uid(), name: "Novo Serviço", executed: false, evidence: false, responsible: "", notes: "" };
     expandEnvironment(environmentId);
+    expandService(service.id);
     updateEnvironment(environmentId, (environment) => ({ ...environment, services: [...environment.services, service] }));
     setEditing({ type: "service", id: service.id });
   };
