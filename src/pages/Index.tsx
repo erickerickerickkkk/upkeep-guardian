@@ -77,6 +77,7 @@ const Index = () => {
   });
   const [selectedAgencyId, setSelectedAgencyId] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ type: "agency" | "environment" | "service"; id: string } | null>(null);
+  const [collapsedEnvironmentIds, setCollapsedEnvironmentIds] = useState<string[]>([]);
 
   useEffect(() => {
     localStorage.setItem("bank-maintenance-data", JSON.stringify(agencies));
@@ -88,6 +89,8 @@ const Index = () => {
   const updateAgency = (agencyId: string, updater: (agency: Agency) => Agency) => setAgencies((current) => current.map((agency) => (agency.id === agencyId ? updater(agency) : agency)));
   const updateEnvironment = (environmentId: string, updater: (environment: Environment) => Environment) => selectedAgencyId && updateAgency(selectedAgencyId, (agency) => ({ ...agency, environments: agency.environments.map((environment) => (environment.id === environmentId ? updater(environment) : environment)) }));
   const updateService = (environmentId: string, serviceId: string, patch: Partial<Service>) => updateEnvironment(environmentId, (environment) => ({ ...environment, services: environment.services.map((service) => (service.id === serviceId ? { ...service, ...patch } : service)) }));
+  const collapseEnvironment = (environmentId: string) => setCollapsedEnvironmentIds((current) => (current.includes(environmentId) ? current : [...current, environmentId]));
+  const expandEnvironment = (environmentId: string) => setCollapsedEnvironmentIds((current) => current.filter((id) => id !== environmentId));
 
   const addAgency = () => {
     const agency = { id: uid(), name: "Nova Agência", code: String(Math.floor(1000 + Math.random() * 9000)), environments: [] };
@@ -105,6 +108,7 @@ const Index = () => {
 
   const addService = (environmentId: string) => {
     const service = { id: uid(), name: "Novo Serviço", executed: false, evidence: false, responsible: "", notes: "" };
+    expandEnvironment(environmentId);
     updateEnvironment(environmentId, (environment) => ({ ...environment, services: [...environment.services, service] }));
     setEditing({ type: "service", id: service.id });
   };
@@ -189,8 +193,11 @@ const Index = () => {
             {selectedAgency.environments.length === 0 && <div className="lg:col-span-3"><EmptyState title="Nenhum ambiente cadastrado" action="+ Ambiente" /></div>}
             {selectedAgency.environments.map((environment) => {
               const progress = completion(environment.services);
+              const isCollapsed = collapsedEnvironmentIds.includes(environment.id);
+              const executedCount = environment.services.filter((service) => service.executed).length;
+              const evidenceCount = environment.services.filter((service) => service.evidence).length;
               return (
-                <article key={environment.id} className="animate-fade-slide rounded-md border border-border bg-panel p-5 shadow-quiet transition-all hover:-translate-y-1 hover:border-primary/40">
+                <article key={environment.id} className="animate-fade-slide rounded-md border border-border bg-panel p-5 shadow-quiet transition-all hover:-translate-y-1 hover:border-primary/40" onDoubleClick={() => expandEnvironment(environment.id)}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1 text-left">
                       {editing?.type === "environment" && editing.id === environment.id ? (
@@ -203,15 +210,25 @@ const Index = () => {
                       )}
                       <p className="mt-1 text-sm text-muted-foreground">{environment.services.length} serviços</p>
                     </div>
-                    <div className="flex gap-1" onClick={(event) => event.stopPropagation()}>
-                      <Button variant="ghost" size="icon" onClick={() => setEditing({ type: "environment", id: environment.id })} aria-label="Editar ambiente"><Edit3 className="size-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => removeEnvironment(environment.id)} aria-label="Remover ambiente"><Trash2 className="size-4 text-destructive" /></Button>
-                    </div>
+                    {!isCollapsed && (
+                      <div className="flex gap-1" onClick={(event) => event.stopPropagation()}>
+                        <Button variant="ghost" size="icon" onClick={() => setEditing({ type: "environment", id: environment.id })} aria-label="Editar ambiente"><Edit3 className="size-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => removeEnvironment(environment.id)} aria-label="Remover ambiente"><Trash2 className="size-4 text-destructive" /></Button>
+                      </div>
+                    )}
                   </div>
-                  <div className="mt-4 space-y-3 border-t border-border pt-4" onClick={(event) => event.stopPropagation()}>
+                  {isCollapsed ? (
+                    <div className="mt-4 grid gap-2 border-t border-border pt-4 text-sm text-muted-foreground">
+                      <p><span className="font-semibold text-panel-foreground">Resumo:</span> {executedCount} de {environment.services.length} serviços executados</p>
+                      <p>{evidenceCount} com evidência fotográfica • {progress}% de conclusão</p>
+                    </div>
+                  ) : <div className="mt-4 space-y-3 border-t border-border pt-4" onClick={(event) => event.stopPropagation()}>
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold text-panel-foreground">Serviços</p>
-                      <Button variant="ghost" size="sm" onClick={() => addService(environment.id)} aria-label="Adicionar serviço"><Plus className="size-4" /> Serviço</Button>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => addService(environment.id)} aria-label="Adicionar serviço"><Plus className="size-4" /> Serviço</Button>
+                        <Button variant="success" size="sm" onClick={() => collapseEnvironment(environment.id)}>Finalizar gestão</Button>
+                      </div>
                     </div>
                     {environment.services.length === 0 ? (
                       <p className="text-sm text-muted-foreground">Nenhum serviço vinculado.</p>
@@ -230,7 +247,7 @@ const Index = () => {
                         <Textarea placeholder="Observações" value={service.notes} onChange={(event) => updateService(environment.id, service.id, { notes: event.target.value })} className="min-h-10 xl:col-span-2" />
                       </div>
                     ))}
-                  </div>
+                  </div>}
                   <div className="mt-5 flex items-center gap-4"><ProgressBar value={progress} /><strong className="w-12 text-right text-lg text-success">{progress}%</strong></div>
                 </article>
               );
