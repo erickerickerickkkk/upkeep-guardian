@@ -163,18 +163,21 @@ const Index = () => {
               return (
                 <article key={agency.id} className="group animate-fade-slide rounded-md border border-border bg-panel p-5 shadow-panel transition-all hover:-translate-y-1 hover:border-primary/40">
                   <div className="flex items-start justify-between gap-4">
-                    <button className="min-w-0 text-left" onClick={() => setSelectedAgencyId(agency.id)}>
+                    <div className="min-w-0 flex-1 text-left">
                       <div className="mb-3 flex size-10 items-center justify-center rounded-sm bg-primary text-primary-foreground"><Building2 className="size-5" /></div>
                       {editing?.type === "agency" && editing.id === agency.id ? (
-                        <div className="grid gap-2" onClick={(event) => event.stopPropagation()}>
-                          <Input value={agency.name} onChange={(event) => updateAgency(agency.id, (item) => ({ ...item, name: event.target.value }))} onBlur={() => setEditing(null)} autoFocus />
-                          <Input value={agency.code} onChange={(event) => updateAgency(agency.id, (item) => ({ ...item, code: event.target.value }))} onBlur={() => setEditing(null)} />
-                        </div>
+                        <form className="grid gap-2" onSubmit={(event) => { event.preventDefault(); setEditing(null); }} onClick={(event) => event.stopPropagation()}>
+                          <Input value={agency.name} onChange={(event) => updateAgency(agency.id, (item) => ({ ...item, name: event.target.value }))} autoFocus />
+                          <div className="flex gap-2">
+                            <Input value={agency.code} onChange={(event) => updateAgency(agency.id, (item) => ({ ...item, code: event.target.value }))} aria-label="Código da agência" />
+                            <Button type="submit" variant="success" size="icon" aria-label="Salvar agência"><Save className="size-4" /></Button>
+                          </div>
+                        </form>
                       ) : (
-                        <><h2 className="truncate text-xl font-semibold text-panel-foreground">{agency.name}</h2><p className="text-sm text-muted-foreground">Código {agency.code} • {agency.environments.length} ambientes</p></>
+                        <button className="text-left" onClick={() => setSelectedAgencyId(agency.id)}><h2 className="truncate text-xl font-semibold text-panel-foreground">{agency.name}</h2><p className="text-sm text-muted-foreground">Código {agency.code} • {agency.environments.length} ambientes</p></button>
                       )}
-                    </button>
-                    <div className="flex gap-1">
+                    </div>
+                    <div className="flex gap-1" onClick={(event) => event.stopPropagation()}>
                       <Button variant="ghost" size="icon" onClick={() => setEditing({ type: "agency", id: agency.id })} aria-label="Editar agência"><Edit3 className="size-4" /></Button>
                       <Button variant="ghost" size="icon" onClick={() => removeAgency(agency.id)} aria-label="Remover agência"><Trash2 className="size-4 text-destructive" /></Button>
                     </div>
