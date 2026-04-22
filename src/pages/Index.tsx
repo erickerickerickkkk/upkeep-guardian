@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Building2, CheckCircle2, ChevronRight, ClipboardCheck, Edit3, Landmark, Plus, Trash2, X } from "lucide-react";
+import { Building2, CheckCircle2, ChevronRight, ClipboardCheck, Edit3, Landmark, Plus, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -94,7 +94,8 @@ const Index = () => {
   const addAgency = () => {
     const agency = { id: uid(), name: "Nova Agência", code: String(Math.floor(1000 + Math.random() * 9000)), environments: [] };
     setAgencies((current) => [...current, agency]);
-    setSelectedAgencyId(agency.id);
+    setSelectedAgencyId(null);
+    setSelectedEnvironmentId(null);
     setEditing({ type: "agency", id: agency.id });
   };
 
@@ -102,7 +103,7 @@ const Index = () => {
     if (!selectedAgencyId) return;
     const environment = { id: uid(), name: "Novo Ambiente", services: [] };
     updateAgency(selectedAgencyId, (agency) => ({ ...agency, environments: [...agency.environments, environment] }));
-    setSelectedEnvironmentId(environment.id);
+    setSelectedEnvironmentId(null);
     setEditing({ type: "environment", id: environment.id });
   };
 
@@ -162,18 +163,21 @@ const Index = () => {
               return (
                 <article key={agency.id} className="group animate-fade-slide rounded-md border border-border bg-panel p-5 shadow-panel transition-all hover:-translate-y-1 hover:border-primary/40">
                   <div className="flex items-start justify-between gap-4">
-                    <button className="min-w-0 text-left" onClick={() => setSelectedAgencyId(agency.id)}>
+                    <div className="min-w-0 flex-1 text-left">
                       <div className="mb-3 flex size-10 items-center justify-center rounded-sm bg-primary text-primary-foreground"><Building2 className="size-5" /></div>
                       {editing?.type === "agency" && editing.id === agency.id ? (
-                        <div className="grid gap-2" onClick={(event) => event.stopPropagation()}>
-                          <Input value={agency.name} onChange={(event) => updateAgency(agency.id, (item) => ({ ...item, name: event.target.value }))} onBlur={() => setEditing(null)} autoFocus />
-                          <Input value={agency.code} onChange={(event) => updateAgency(agency.id, (item) => ({ ...item, code: event.target.value }))} onBlur={() => setEditing(null)} />
-                        </div>
+                        <form className="grid gap-2" onSubmit={(event) => { event.preventDefault(); setEditing(null); }} onClick={(event) => event.stopPropagation()}>
+                          <Input value={agency.name} onChange={(event) => updateAgency(agency.id, (item) => ({ ...item, name: event.target.value }))} autoFocus />
+                          <div className="flex gap-2">
+                            <Input value={agency.code} onChange={(event) => updateAgency(agency.id, (item) => ({ ...item, code: event.target.value }))} aria-label="Código da agência" />
+                            <Button type="submit" variant="success" size="icon" aria-label="Salvar agência"><Save className="size-4" /></Button>
+                          </div>
+                        </form>
                       ) : (
-                        <><h2 className="truncate text-xl font-semibold text-panel-foreground">{agency.name}</h2><p className="text-sm text-muted-foreground">Código {agency.code} • {agency.environments.length} ambientes</p></>
+                        <button className="text-left" onClick={() => setSelectedAgencyId(agency.id)}><h2 className="truncate text-xl font-semibold text-panel-foreground">{agency.name}</h2><p className="text-sm text-muted-foreground">Código {agency.code} • {agency.environments.length} ambientes</p></button>
                       )}
-                    </button>
-                    <div className="flex gap-1">
+                    </div>
+                    <div className="flex gap-1" onClick={(event) => event.stopPropagation()}>
                       <Button variant="ghost" size="icon" onClick={() => setEditing({ type: "agency", id: agency.id })} aria-label="Editar agência"><Edit3 className="size-4" /></Button>
                       <Button variant="ghost" size="icon" onClick={() => removeAgency(agency.id)} aria-label="Remover agência"><Trash2 className="size-4 text-destructive" /></Button>
                     </div>
@@ -196,12 +200,31 @@ const Index = () => {
               return (
                 <article key={environment.id} className="animate-fade-slide rounded-md border border-border bg-panel p-5 shadow-quiet transition-all hover:-translate-y-1 hover:border-primary/40">
                   <div className="flex items-start justify-between gap-3">
-                    <button className="min-w-0 flex-1 text-left" onClick={() => setSelectedEnvironmentId(environment.id)}>
-                      {editing?.type === "environment" && editing.id === environment.id ? <Input value={environment.name} onChange={(event) => updateEnvironment(environment.id, (item) => ({ ...item, name: event.target.value }))} onBlur={() => setEditing(null)} autoFocus /> : <h2 className="truncate text-lg font-semibold">{environment.name}</h2>}
+                    <div className="min-w-0 flex-1 text-left">
+                      {editing?.type === "environment" && editing.id === environment.id ? (
+                        <form className="flex gap-2" onSubmit={(event) => { event.preventDefault(); setEditing(null); }} onClick={(event) => event.stopPropagation()}>
+                          <Input value={environment.name} onChange={(event) => updateEnvironment(environment.id, (item) => ({ ...item, name: event.target.value }))} autoFocus />
+                          <Button type="submit" variant="success" size="icon" aria-label="Salvar ambiente"><Save className="size-4" /></Button>
+                        </form>
+                      ) : (
+                        <button className="text-left" onClick={() => setSelectedEnvironmentId(environment.id)}><h2 className="truncate text-lg font-semibold">{environment.name}</h2></button>
+                      )}
                       <p className="mt-1 text-sm text-muted-foreground">{environment.services.length} serviços</p>
-                    </button>
-                    <Button variant="ghost" size="icon" onClick={() => setEditing({ type: "environment", id: environment.id })} aria-label="Editar ambiente"><Edit3 className="size-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => removeEnvironment(environment.id)} aria-label="Remover ambiente"><Trash2 className="size-4 text-destructive" /></Button>
+                    </div>
+                    <div className="flex gap-1" onClick={(event) => event.stopPropagation()}>
+                      <Button variant="ghost" size="icon" onClick={() => setEditing({ type: "environment", id: environment.id })} aria-label="Editar ambiente"><Edit3 className="size-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => removeEnvironment(environment.id)} aria-label="Remover ambiente"><Trash2 className="size-4 text-destructive" /></Button>
+                    </div>
+                  </div>
+                  <div className="mt-4 space-y-2 border-t border-border pt-4">
+                    {environment.services.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Nenhum serviço vinculado.</p>
+                    ) : environment.services.map((service) => (
+                      <button key={service.id} className="flex w-full items-center justify-between gap-3 rounded-sm bg-surface px-3 py-2 text-left text-sm transition-colors hover:bg-secondary" onClick={() => setSelectedEnvironmentId(environment.id)}>
+                        <span className="min-w-0 truncate font-medium">{service.name}</span>
+                        <span className="shrink-0 text-xs font-semibold text-muted-foreground">{service.executed ? "Executado" : "Pendente"}</span>
+                      </button>
+                    ))}
                   </div>
                   <div className="mt-5 flex items-center gap-4"><ProgressBar value={progress} /><strong className="w-12 text-right text-lg text-success">{progress}%</strong></div>
                 </article>
