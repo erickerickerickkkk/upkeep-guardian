@@ -93,7 +93,6 @@ const Index = () => {
     const agency = { id: uid(), name: "Nova Agência", code: String(Math.floor(1000 + Math.random() * 9000)), environments: [] };
     setAgencies((current) => [...current, agency]);
     setSelectedAgencyId(null);
-    setSelectedEnvironmentId(null);
     setEditing({ type: "agency", id: agency.id });
   };
 
@@ -101,14 +100,12 @@ const Index = () => {
     if (!selectedAgencyId) return;
     const environment = { id: uid(), name: "Novo Ambiente", services: [] };
     updateAgency(selectedAgencyId, (agency) => ({ ...agency, environments: [...agency.environments, environment] }));
-    setSelectedEnvironmentId(null);
     setEditing({ type: "environment", id: environment.id });
   };
 
-  const addService = () => {
-    if (!selectedEnvironmentId) return;
+  const addService = (environmentId: string) => {
     const service = { id: uid(), name: "Novo Serviço", executed: false, evidence: false, responsible: "", notes: "" };
-    updateEnvironment(selectedEnvironmentId, (environment) => ({ ...environment, services: [...environment.services, service] }));
+    updateEnvironment(environmentId, (environment) => ({ ...environment, services: [...environment.services, service] }));
     setEditing({ type: "service", id: service.id });
   };
 
@@ -116,17 +113,15 @@ const Index = () => {
     setAgencies((current) => current.filter((agency) => agency.id !== agencyId));
     if (selectedAgencyId === agencyId) {
       setSelectedAgencyId(null);
-      setSelectedEnvironmentId(null);
     }
   };
 
   const removeEnvironment = (environmentId: string) => {
     if (!selectedAgencyId) return;
     updateAgency(selectedAgencyId, (agency) => ({ ...agency, environments: agency.environments.filter((environment) => environment.id !== environmentId) }));
-    if (selectedEnvironmentId === environmentId) setSelectedEnvironmentId(null);
   };
 
-  const removeService = (serviceId: string) => selectedEnvironmentId && updateEnvironment(selectedEnvironmentId, (environment) => ({ ...environment, services: environment.services.filter((service) => service.id !== serviceId) }));
+  const removeService = (environmentId: string, serviceId: string) => updateEnvironment(environmentId, (environment) => ({ ...environment, services: environment.services.filter((service) => service.id !== serviceId) }));
 
   return (
     <main className="min-h-screen bg-background text-foreground">
