@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Building2, CheckCircle2, ChevronRight, ClipboardCheck, Edit3, Landmark, Plus, Trash2, X } from "lucide-react";
+import { Building2, CheckCircle2, ChevronRight, ClipboardCheck, Edit3, Landmark, Plus, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -94,7 +94,8 @@ const Index = () => {
   const addAgency = () => {
     const agency = { id: uid(), name: "Nova Agência", code: String(Math.floor(1000 + Math.random() * 9000)), environments: [] };
     setAgencies((current) => [...current, agency]);
-    setSelectedAgencyId(agency.id);
+    setSelectedAgencyId(null);
+    setSelectedEnvironmentId(null);
     setEditing({ type: "agency", id: agency.id });
   };
 
@@ -102,7 +103,7 @@ const Index = () => {
     if (!selectedAgencyId) return;
     const environment = { id: uid(), name: "Novo Ambiente", services: [] };
     updateAgency(selectedAgencyId, (agency) => ({ ...agency, environments: [...agency.environments, environment] }));
-    setSelectedEnvironmentId(environment.id);
+    setSelectedEnvironmentId(null);
     setEditing({ type: "environment", id: environment.id });
   };
 
