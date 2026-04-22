@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 type Service = { id: string; name: string; executed: boolean; evidence: boolean; responsible: string; notes: string };
 type Environment = { id: string; name: string; services: Service[] };
 type Agency = { id: string; name: string; code: string; environments: Environment[] };
-type Level = "agencies" | "environments" | "services";
+type Level = "agencies" | "environments";
 
 const initialData: Agency[] = [
   {
@@ -76,7 +76,6 @@ const Index = () => {
     return saved ? JSON.parse(saved) : initialData;
   });
   const [selectedAgencyId, setSelectedAgencyId] = useState<string | null>(null);
-  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ type: "agency" | "environment" | "service"; id: string } | null>(null);
 
   useEffect(() => {
@@ -84,18 +83,16 @@ const Index = () => {
   }, [agencies]);
 
   const selectedAgency = useMemo(() => agencies.find((agency) => agency.id === selectedAgencyId) ?? null, [agencies, selectedAgencyId]);
-  const selectedEnvironment = useMemo(() => selectedAgency?.environments.find((environment) => environment.id === selectedEnvironmentId) ?? null, [selectedAgency, selectedEnvironmentId]);
-  const level: Level = selectedEnvironment ? "services" : selectedAgency ? "environments" : "agencies";
+  const level: Level = selectedAgency ? "environments" : "agencies";
 
   const updateAgency = (agencyId: string, updater: (agency: Agency) => Agency) => setAgencies((current) => current.map((agency) => (agency.id === agencyId ? updater(agency) : agency)));
   const updateEnvironment = (environmentId: string, updater: (environment: Environment) => Environment) => selectedAgencyId && updateAgency(selectedAgencyId, (agency) => ({ ...agency, environments: agency.environments.map((environment) => (environment.id === environmentId ? updater(environment) : environment)) }));
-  const updateService = (serviceId: string, patch: Partial<Service>) => selectedEnvironmentId && updateEnvironment(selectedEnvironmentId, (environment) => ({ ...environment, services: environment.services.map((service) => (service.id === serviceId ? { ...service, ...patch } : service)) }));
+  const updateService = (environmentId: string, serviceId: string, patch: Partial<Service>) => updateEnvironment(environmentId, (environment) => ({ ...environment, services: environment.services.map((service) => (service.id === serviceId ? { ...service, ...patch } : service)) }));
 
   const addAgency = () => {
     const agency = { id: uid(), name: "Nova Agência", code: String(Math.floor(1000 + Math.random() * 9000)), environments: [] };
     setAgencies((current) => [...current, agency]);
     setSelectedAgencyId(null);
-    setSelectedEnvironmentId(null);
     setEditing({ type: "agency", id: agency.id });
   };
 
@@ -103,14 +100,12 @@ const Index = () => {
     if (!selectedAgencyId) return;
     const environment = { id: uid(), name: "Novo Ambiente", services: [] };
     updateAgency(selectedAgencyId, (agency) => ({ ...agency, environments: [...agency.environments, environment] }));
-    setSelectedEnvironmentId(null);
     setEditing({ type: "environment", id: environment.id });
   };
 
-  const addService = () => {
-    if (!selectedEnvironmentId) return;
+  const addService = (environmentId: string) => {
     const service = { id: uid(), name: "Novo Serviço", executed: false, evidence: false, responsible: "", notes: "" };
-    updateEnvironment(selectedEnvironmentId, (environment) => ({ ...environment, services: [...environment.services, service] }));
+    updateEnvironment(environmentId, (environment) => ({ ...environment, services: [...environment.services, service] }));
     setEditing({ type: "service", id: service.id });
   };
 
@@ -118,17 +113,15 @@ const Index = () => {
     setAgencies((current) => current.filter((agency) => agency.id !== agencyId));
     if (selectedAgencyId === agencyId) {
       setSelectedAgencyId(null);
-      setSelectedEnvironmentId(null);
     }
   };
 
   const removeEnvironment = (environmentId: string) => {
     if (!selectedAgencyId) return;
     updateAgency(selectedAgencyId, (agency) => ({ ...agency, environments: agency.environments.filter((environment) => environment.id !== environmentId) }));
-    if (selectedEnvironmentId === environmentId) setSelectedEnvironmentId(null);
   };
 
-  const removeService = (serviceId: string) => selectedEnvironmentId && updateEnvironment(selectedEnvironmentId, (environment) => ({ ...environment, services: environment.services.filter((service) => service.id !== serviceId) }));
+  const removeService = (environmentId: string, serviceId: string) => updateEnvironment(environmentId, (environment) => ({ ...environment, services: environment.services.filter((service) => service.id !== serviceId) }));
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -142,14 +135,13 @@ const Index = () => {
               <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Manutenção preventiva e corretiva</h1>
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">Controle local por agência, ambiente e serviço com performance calculada em tempo real.</p>
             </div>
-            <Button variant="command" onClick={level === "agencies" ? addAgency : level === "environments" ? addEnvironment : addService} className="transition-transform hover:-translate-y-0.5">
-              <Plus className="size-4" /> {level === "agencies" ? "Agência" : level === "environments" ? "Ambiente" : "Serviço"}
+            <Button variant="command" onClick={level === "agencies" ? addAgency : addEnvironment} className="transition-transform hover:-translate-y-0.5">
+              <Plus className="size-4" /> {level === "agencies" ? "Agência" : "Ambiente"}
             </Button>
           </div>
           <nav className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <button className="rounded-sm px-2 py-1 hover:bg-surface hover:text-foreground" onClick={() => { setSelectedAgencyId(null); setSelectedEnvironmentId(null); }}>Agências</button>
-            {selectedAgency && <><ChevronRight className="size-4" /><button className="rounded-sm px-2 py-1 hover:bg-surface hover:text-foreground" onClick={() => setSelectedEnvironmentId(null)}>{selectedAgency.name}</button></>}
-            {selectedEnvironment && <><ChevronRight className="size-4" /><span className="rounded-sm bg-surface px-2 py-1 text-foreground">{selectedEnvironment.name}</span></>}
+            <button className="rounded-sm px-2 py-1 hover:bg-surface hover:text-foreground" onClick={() => setSelectedAgencyId(null)}>Agências</button>
+            {selectedAgency && <><ChevronRight className="size-4" /><span className="rounded-sm bg-surface px-2 py-1 text-foreground">{selectedAgency.name}</span></>}
           </nav>
         </div>
       </section>
@@ -207,7 +199,7 @@ const Index = () => {
                           <Button type="submit" variant="success" size="icon" aria-label="Salvar ambiente"><Save className="size-4" /></Button>
                         </form>
                       ) : (
-                        <button className="text-left" onClick={() => setSelectedEnvironmentId(environment.id)}><h2 className="truncate text-lg font-semibold">{environment.name}</h2></button>
+                        <h2 className="truncate text-lg font-semibold">{environment.name}</h2>
                       )}
                       <p className="mt-1 text-sm text-muted-foreground">{environment.services.length} serviços</p>
                     </div>
@@ -216,40 +208,33 @@ const Index = () => {
                       <Button variant="ghost" size="icon" onClick={() => removeEnvironment(environment.id)} aria-label="Remover ambiente"><Trash2 className="size-4 text-destructive" /></Button>
                     </div>
                   </div>
-                  <div className="mt-4 space-y-2 border-t border-border pt-4">
+                  <div className="mt-4 space-y-3 border-t border-border pt-4" onClick={(event) => event.stopPropagation()}>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-semibold text-panel-foreground">Serviços</p>
+                      <Button variant="ghost" size="sm" onClick={() => addService(environment.id)} aria-label="Adicionar serviço"><Plus className="size-4" /> Serviço</Button>
+                    </div>
                     {environment.services.length === 0 ? (
                       <p className="text-sm text-muted-foreground">Nenhum serviço vinculado.</p>
                     ) : environment.services.map((service) => (
-                      <button key={service.id} className="flex w-full items-center justify-between gap-3 rounded-sm bg-surface px-3 py-2 text-left text-sm transition-colors hover:bg-secondary" onClick={() => setSelectedEnvironmentId(environment.id)}>
-                        <span className="min-w-0 truncate font-medium">{service.name}</span>
-                        <span className="shrink-0 text-xs font-semibold text-muted-foreground">{service.executed ? "Executado" : "Pendente"}</span>
-                      </button>
+                      <div key={service.id} className="grid gap-3 rounded-sm bg-surface p-3 text-sm xl:grid-cols-[1fr_140px_120px]">
+                        <div className="xl:col-span-3">
+                          {editing?.type === "service" && editing.id === service.id ? <Input value={service.name} onChange={(event) => updateService(environment.id, service.id, { name: event.target.value })} onBlur={() => setEditing(null)} autoFocus /> : <button className="flex items-center gap-2 text-left font-semibold" onClick={() => setEditing({ type: "service", id: service.id })}>{service.executed && <CheckCircle2 className="size-4 animate-status-pulse text-success" />}{service.name}</button>}
+                        </div>
+                        <Select value={service.executed ? "executed" : "pending"} onValueChange={(value) => updateService(environment.id, service.id, { executed: value === "executed" })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent><SelectItem value="executed">Executado</SelectItem><SelectItem value="pending">Não Executado</SelectItem></SelectContent>
+                        </Select>
+                        <label className="flex h-10 items-center gap-2 rounded-md border border-input px-3"><Checkbox checked={service.evidence} onCheckedChange={(checked) => updateService(environment.id, service.id, { evidence: Boolean(checked) })} /> Evidência</label>
+                        <div className="flex justify-end gap-1"><Button variant="ghost" size="icon" onClick={() => setEditing({ type: "service", id: service.id })} aria-label="Editar serviço"><Edit3 className="size-4" /></Button><Button variant="ghost" size="icon" onClick={() => removeService(environment.id, service.id)} aria-label="Remover serviço"><Trash2 className="size-4 text-destructive" /></Button></div>
+                        <Input className="xl:col-span-1" placeholder="Responsável" value={service.responsible} onChange={(event) => updateService(environment.id, service.id, { responsible: event.target.value })} />
+                        <Textarea placeholder="Observações" value={service.notes} onChange={(event) => updateService(environment.id, service.id, { notes: event.target.value })} className="min-h-10 xl:col-span-2" />
+                      </div>
                     ))}
                   </div>
                   <div className="mt-5 flex items-center gap-4"><ProgressBar value={progress} /><strong className="w-12 text-right text-lg text-success">{progress}%</strong></div>
                 </article>
               );
             })}
-          </div>
-        )}
-
-        {level === "services" && selectedEnvironment && (
-          <div className="overflow-hidden rounded-md border border-border bg-panel shadow-panel">
-            {selectedEnvironment.services.length === 0 ? <EmptyState title="Nenhum serviço cadastrado" action="+ Serviço" /> : selectedEnvironment.services.map((service) => (
-              <div key={service.id} className="grid gap-4 border-b border-border p-4 last:border-b-0 xl:grid-cols-[1.15fr_170px_130px_190px_1fr_88px] xl:items-start">
-                <div>
-                  {editing?.type === "service" && editing.id === service.id ? <Input value={service.name} onChange={(event) => updateService(service.id, { name: event.target.value })} onBlur={() => setEditing(null)} autoFocus /> : <button className="flex items-center gap-2 text-left font-semibold" onClick={() => setEditing({ type: "service", id: service.id })}>{service.executed && <CheckCircle2 className="size-4 animate-status-pulse text-success" />}{service.name}</button>}
-                </div>
-                <Select value={service.executed ? "executed" : "pending"} onValueChange={(value) => updateService(service.id, { executed: value === "executed" })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="executed">Executado</SelectItem><SelectItem value="pending">Não Executado</SelectItem></SelectContent>
-                </Select>
-                <label className="flex h-10 items-center gap-2 rounded-md border border-input px-3 text-sm"><Checkbox checked={service.evidence} onCheckedChange={(checked) => updateService(service.id, { evidence: Boolean(checked) })} /> Evidência</label>
-                <Input placeholder="Responsável" value={service.responsible} onChange={(event) => updateService(service.id, { responsible: event.target.value })} />
-                <Textarea placeholder="Observações" value={service.notes} onChange={(event) => updateService(service.id, { notes: event.target.value })} className="min-h-10" />
-                <div className="flex justify-end gap-1"><Button variant="ghost" size="icon" onClick={() => setEditing({ type: "service", id: service.id })} aria-label="Editar serviço"><Edit3 className="size-4" /></Button><Button variant="ghost" size="icon" onClick={() => removeService(service.id)} aria-label="Remover serviço"><Trash2 className="size-4 text-destructive" /></Button></div>
-              </div>
-            ))}
           </div>
         )}
       </section>
