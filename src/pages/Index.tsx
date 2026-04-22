@@ -186,6 +186,24 @@ const Index = () => {
                     <ProgressBar value={progress} />
                     <strong className="w-12 text-right text-lg text-success">{progress}%</strong>
                   </div>
+                  <div className="mt-4 grid gap-2 border-t border-border pt-4 text-sm text-muted-foreground">
+                    <p className="font-semibold text-panel-foreground">Ambientes vinculados</p>
+                    {agency.environments.length === 0 ? (
+                      <p>Nenhum ambiente cadastrado.</p>
+                    ) : agency.environments.map((environment) => {
+                      const environmentProgress = completion(environment.services);
+                      return (
+                        <div key={environment.id} className="grid gap-1 rounded-sm bg-surface p-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="min-w-0 truncate font-semibold text-panel-foreground">{environment.name}</p>
+                            <span className="shrink-0 text-xs font-semibold text-success">{environmentProgress}%</span>
+                          </div>
+                          <p>{environment.services.filter((service) => service.executed).length} de {environment.services.length} serviços executados</p>
+                          <ProgressBar value={environmentProgress} />
+                        </div>
+                      );
+                    })}
+                  </div>
                 </article>
               );
             })}
@@ -259,9 +277,13 @@ const Index = () => {
                                 <SelectContent><SelectItem value="executed">Executado</SelectItem><SelectItem value="pending">Não Executado</SelectItem></SelectContent>
                               </Select>
                               <label className="flex h-10 items-center gap-2 rounded-md border border-input px-3"><Checkbox checked={service.evidence} onCheckedChange={(checked) => updateService(environment.id, service.id, { evidence: Boolean(checked) })} /> Evidência</label>
-                              <div className="flex justify-end gap-1"><Button variant="success" size="sm" onClick={() => collapseService(service.id)}>Finalizar</Button><Button variant="ghost" size="icon" onClick={() => setEditing({ type: "service", id: service.id })} aria-label="Editar serviço"><Edit3 className="size-4" /></Button><Button variant="ghost" size="icon" onClick={() => removeService(environment.id, service.id)} aria-label="Remover serviço"><Trash2 className="size-4 text-destructive" /></Button></div>
                               <Input className="xl:col-span-1" placeholder="Responsável" value={service.responsible} onChange={(event) => updateService(environment.id, service.id, { responsible: event.target.value })} />
                               <Textarea placeholder="Observações" value={service.notes} onChange={(event) => updateService(environment.id, service.id, { notes: event.target.value })} className="min-h-10 xl:col-span-2" />
+                              <div className="flex justify-end gap-1 xl:col-span-3">
+                                <Button variant="success" size="sm" onClick={() => { setEditing(null); collapseService(service.id); }}><Save className="size-4" /> Salvar</Button>
+                                <Button variant="ghost" size="icon" onClick={() => setEditing({ type: "service", id: service.id })} aria-label="Editar serviço"><Edit3 className="size-4" /></Button>
+                                <Button variant="ghost" size="icon" onClick={() => removeService(environment.id, service.id)} aria-label="Remover serviço"><Trash2 className="size-4 text-destructive" /></Button>
+                              </div>
                             </div>
                           )}
                         </div>
