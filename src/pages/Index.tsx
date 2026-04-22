@@ -186,6 +186,24 @@ const Index = () => {
                     <ProgressBar value={progress} />
                     <strong className="w-12 text-right text-lg text-success">{progress}%</strong>
                   </div>
+                  <div className="mt-4 grid gap-2 border-t border-border pt-4 text-sm text-muted-foreground">
+                    <p className="font-semibold text-panel-foreground">Ambientes vinculados</p>
+                    {agency.environments.length === 0 ? (
+                      <p>Nenhum ambiente cadastrado.</p>
+                    ) : agency.environments.map((environment) => {
+                      const environmentProgress = completion(environment.services);
+                      return (
+                        <div key={environment.id} className="grid gap-1 rounded-sm bg-surface p-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="min-w-0 truncate font-semibold text-panel-foreground">{environment.name}</p>
+                            <span className="shrink-0 text-xs font-semibold text-success">{environmentProgress}%</span>
+                          </div>
+                          <p>{environment.services.filter((service) => service.executed).length} de {environment.services.length} serviços executados</p>
+                          <ProgressBar value={environmentProgress} />
+                        </div>
+                      );
+                    })}
+                  </div>
                 </article>
               );
             })}
