@@ -237,26 +237,6 @@ const Index = () => {
             })}
           </div>
         )}
-
-        {level === "services" && selectedEnvironment && (
-          <div className="overflow-hidden rounded-md border border-border bg-panel shadow-panel">
-            {selectedEnvironment.services.length === 0 ? <EmptyState title="Nenhum serviço cadastrado" action="+ Serviço" /> : selectedEnvironment.services.map((service) => (
-              <div key={service.id} className="grid gap-4 border-b border-border p-4 last:border-b-0 xl:grid-cols-[1.15fr_170px_130px_190px_1fr_88px] xl:items-start">
-                <div>
-                  {editing?.type === "service" && editing.id === service.id ? <Input value={service.name} onChange={(event) => updateService(service.id, { name: event.target.value })} onBlur={() => setEditing(null)} autoFocus /> : <button className="flex items-center gap-2 text-left font-semibold" onClick={() => setEditing({ type: "service", id: service.id })}>{service.executed && <CheckCircle2 className="size-4 animate-status-pulse text-success" />}{service.name}</button>}
-                </div>
-                <Select value={service.executed ? "executed" : "pending"} onValueChange={(value) => updateService(service.id, { executed: value === "executed" })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="executed">Executado</SelectItem><SelectItem value="pending">Não Executado</SelectItem></SelectContent>
-                </Select>
-                <label className="flex h-10 items-center gap-2 rounded-md border border-input px-3 text-sm"><Checkbox checked={service.evidence} onCheckedChange={(checked) => updateService(service.id, { evidence: Boolean(checked) })} /> Evidência</label>
-                <Input placeholder="Responsável" value={service.responsible} onChange={(event) => updateService(service.id, { responsible: event.target.value })} />
-                <Textarea placeholder="Observações" value={service.notes} onChange={(event) => updateService(service.id, { notes: event.target.value })} className="min-h-10" />
-                <div className="flex justify-end gap-1"><Button variant="ghost" size="icon" onClick={() => setEditing({ type: "service", id: service.id })} aria-label="Editar serviço"><Edit3 className="size-4" /></Button><Button variant="ghost" size="icon" onClick={() => removeService(service.id)} aria-label="Remover serviço"><Trash2 className="size-4 text-destructive" /></Button></div>
-              </div>
-            ))}
-          </div>
-        )}
       </section>
     </main>
   );
