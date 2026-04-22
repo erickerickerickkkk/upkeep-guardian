@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 type Service = { id: string; name: string; executed: boolean; evidence: boolean; responsible: string; notes: string };
 type Environment = { id: string; name: string; services: Service[] };
 type Agency = { id: string; name: string; code: string; environments: Environment[] };
-type Level = "agencies" | "environments" | "services";
+type Level = "agencies" | "environments";
 
 const initialData: Agency[] = [
   {
@@ -76,7 +76,6 @@ const Index = () => {
     return saved ? JSON.parse(saved) : initialData;
   });
   const [selectedAgencyId, setSelectedAgencyId] = useState<string | null>(null);
-  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ type: "agency" | "environment" | "service"; id: string } | null>(null);
 
   useEffect(() => {
@@ -84,12 +83,11 @@ const Index = () => {
   }, [agencies]);
 
   const selectedAgency = useMemo(() => agencies.find((agency) => agency.id === selectedAgencyId) ?? null, [agencies, selectedAgencyId]);
-  const selectedEnvironment = useMemo(() => selectedAgency?.environments.find((environment) => environment.id === selectedEnvironmentId) ?? null, [selectedAgency, selectedEnvironmentId]);
-  const level: Level = selectedEnvironment ? "services" : selectedAgency ? "environments" : "agencies";
+  const level: Level = selectedAgency ? "environments" : "agencies";
 
   const updateAgency = (agencyId: string, updater: (agency: Agency) => Agency) => setAgencies((current) => current.map((agency) => (agency.id === agencyId ? updater(agency) : agency)));
   const updateEnvironment = (environmentId: string, updater: (environment: Environment) => Environment) => selectedAgencyId && updateAgency(selectedAgencyId, (agency) => ({ ...agency, environments: agency.environments.map((environment) => (environment.id === environmentId ? updater(environment) : environment)) }));
-  const updateService = (serviceId: string, patch: Partial<Service>) => selectedEnvironmentId && updateEnvironment(selectedEnvironmentId, (environment) => ({ ...environment, services: environment.services.map((service) => (service.id === serviceId ? { ...service, ...patch } : service)) }));
+  const updateService = (environmentId: string, serviceId: string, patch: Partial<Service>) => updateEnvironment(environmentId, (environment) => ({ ...environment, services: environment.services.map((service) => (service.id === serviceId ? { ...service, ...patch } : service)) }));
 
   const addAgency = () => {
     const agency = { id: uid(), name: "Nova Agência", code: String(Math.floor(1000 + Math.random() * 9000)), environments: [] };
