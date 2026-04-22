@@ -77,6 +77,7 @@ const Index = () => {
   });
   const [selectedAgencyId, setSelectedAgencyId] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ type: "agency" | "environment" | "service"; id: string } | null>(null);
+  const [collapsedEnvironmentIds, setCollapsedEnvironmentIds] = useState<string[]>([]);
 
   useEffect(() => {
     localStorage.setItem("bank-maintenance-data", JSON.stringify(agencies));
@@ -88,6 +89,8 @@ const Index = () => {
   const updateAgency = (agencyId: string, updater: (agency: Agency) => Agency) => setAgencies((current) => current.map((agency) => (agency.id === agencyId ? updater(agency) : agency)));
   const updateEnvironment = (environmentId: string, updater: (environment: Environment) => Environment) => selectedAgencyId && updateAgency(selectedAgencyId, (agency) => ({ ...agency, environments: agency.environments.map((environment) => (environment.id === environmentId ? updater(environment) : environment)) }));
   const updateService = (environmentId: string, serviceId: string, patch: Partial<Service>) => updateEnvironment(environmentId, (environment) => ({ ...environment, services: environment.services.map((service) => (service.id === serviceId ? { ...service, ...patch } : service)) }));
+  const collapseEnvironment = (environmentId: string) => setCollapsedEnvironmentIds((current) => (current.includes(environmentId) ? current : [...current, environmentId]));
+  const expandEnvironment = (environmentId: string) => setCollapsedEnvironmentIds((current) => current.filter((id) => id !== environmentId));
 
   const addAgency = () => {
     const agency = { id: uid(), name: "Nova Agência", code: String(Math.floor(1000 + Math.random() * 9000)), environments: [] };
@@ -105,6 +108,7 @@ const Index = () => {
 
   const addService = (environmentId: string) => {
     const service = { id: uid(), name: "Novo Serviço", executed: false, evidence: false, responsible: "", notes: "" };
+    expandEnvironment(environmentId);
     updateEnvironment(environmentId, (environment) => ({ ...environment, services: [...environment.services, service] }));
     setEditing({ type: "service", id: service.id });
   };
