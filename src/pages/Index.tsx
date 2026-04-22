@@ -135,14 +135,13 @@ const Index = () => {
               <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Manutenção preventiva e corretiva</h1>
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">Controle local por agência, ambiente e serviço com performance calculada em tempo real.</p>
             </div>
-            <Button variant="command" onClick={level === "agencies" ? addAgency : level === "environments" ? addEnvironment : addService} className="transition-transform hover:-translate-y-0.5">
-              <Plus className="size-4" /> {level === "agencies" ? "Agência" : level === "environments" ? "Ambiente" : "Serviço"}
+            <Button variant="command" onClick={level === "agencies" ? addAgency : addEnvironment} className="transition-transform hover:-translate-y-0.5">
+              <Plus className="size-4" /> {level === "agencies" ? "Agência" : "Ambiente"}
             </Button>
           </div>
           <nav className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <button className="rounded-sm px-2 py-1 hover:bg-surface hover:text-foreground" onClick={() => { setSelectedAgencyId(null); setSelectedEnvironmentId(null); }}>Agências</button>
-            {selectedAgency && <><ChevronRight className="size-4" /><button className="rounded-sm px-2 py-1 hover:bg-surface hover:text-foreground" onClick={() => setSelectedEnvironmentId(null)}>{selectedAgency.name}</button></>}
-            {selectedEnvironment && <><ChevronRight className="size-4" /><span className="rounded-sm bg-surface px-2 py-1 text-foreground">{selectedEnvironment.name}</span></>}
+            <button className="rounded-sm px-2 py-1 hover:bg-surface hover:text-foreground" onClick={() => setSelectedAgencyId(null)}>Agências</button>
+            {selectedAgency && <><ChevronRight className="size-4" /><span className="rounded-sm bg-surface px-2 py-1 text-foreground">{selectedAgency.name}</span></>}
           </nav>
         </div>
       </section>
