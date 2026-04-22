@@ -200,12 +200,31 @@ const Index = () => {
               return (
                 <article key={environment.id} className="animate-fade-slide rounded-md border border-border bg-panel p-5 shadow-quiet transition-all hover:-translate-y-1 hover:border-primary/40">
                   <div className="flex items-start justify-between gap-3">
-                    <button className="min-w-0 flex-1 text-left" onClick={() => setSelectedEnvironmentId(environment.id)}>
-                      {editing?.type === "environment" && editing.id === environment.id ? <Input value={environment.name} onChange={(event) => updateEnvironment(environment.id, (item) => ({ ...item, name: event.target.value }))} onBlur={() => setEditing(null)} autoFocus /> : <h2 className="truncate text-lg font-semibold">{environment.name}</h2>}
+                    <div className="min-w-0 flex-1 text-left">
+                      {editing?.type === "environment" && editing.id === environment.id ? (
+                        <form className="flex gap-2" onSubmit={(event) => { event.preventDefault(); setEditing(null); }} onClick={(event) => event.stopPropagation()}>
+                          <Input value={environment.name} onChange={(event) => updateEnvironment(environment.id, (item) => ({ ...item, name: event.target.value }))} autoFocus />
+                          <Button type="submit" variant="success" size="icon" aria-label="Salvar ambiente"><Save className="size-4" /></Button>
+                        </form>
+                      ) : (
+                        <button className="text-left" onClick={() => setSelectedEnvironmentId(environment.id)}><h2 className="truncate text-lg font-semibold">{environment.name}</h2></button>
+                      )}
                       <p className="mt-1 text-sm text-muted-foreground">{environment.services.length} serviços</p>
-                    </button>
-                    <Button variant="ghost" size="icon" onClick={() => setEditing({ type: "environment", id: environment.id })} aria-label="Editar ambiente"><Edit3 className="size-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => removeEnvironment(environment.id)} aria-label="Remover ambiente"><Trash2 className="size-4 text-destructive" /></Button>
+                    </div>
+                    <div className="flex gap-1" onClick={(event) => event.stopPropagation()}>
+                      <Button variant="ghost" size="icon" onClick={() => setEditing({ type: "environment", id: environment.id })} aria-label="Editar ambiente"><Edit3 className="size-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => removeEnvironment(environment.id)} aria-label="Remover ambiente"><Trash2 className="size-4 text-destructive" /></Button>
+                    </div>
+                  </div>
+                  <div className="mt-4 space-y-2 border-t border-border pt-4">
+                    {environment.services.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Nenhum serviço vinculado.</p>
+                    ) : environment.services.map((service) => (
+                      <button key={service.id} className="flex w-full items-center justify-between gap-3 rounded-sm bg-surface px-3 py-2 text-left text-sm transition-colors hover:bg-secondary" onClick={() => setSelectedEnvironmentId(environment.id)}>
+                        <span className="min-w-0 truncate font-medium">{service.name}</span>
+                        <span className="shrink-0 text-xs font-semibold text-muted-foreground">{service.executed ? "Executado" : "Pendente"}</span>
+                      </button>
+                    ))}
                   </div>
                   <div className="mt-5 flex items-center gap-4"><ProgressBar value={progress} /><strong className="w-12 text-right text-lg text-success">{progress}%</strong></div>
                 </article>
